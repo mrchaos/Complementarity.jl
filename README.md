@@ -58,13 +58,19 @@ s.t. (x+2) x = 0,  x ≥ 0,   x+2 ≥ 0
 ```
 
 ```julia
-using JuMP, Ipopt, Complementarity
-m = Model(solver=IpoptSolver())
+using JuMP, Ipopt, Complementarity, Pkg
+b = Pkg.installed()["JuMP"] >= v"0.19"
+m = b ? Model(with_optimizer(Ipopt.Optimizer)) : Model(solver=IpoptSolver())
 @variable(m, x>=0)
 @NLobjective(m, Min, x^3)
 @complements(m, 0 <= x+2,   x >= 0)
-solve(m)
-@show getvalue(x)
+if b
+    optimize!(m)
+    @show JuMP.value.(x)
+else
+    solve(m)
+    @show getvalue(x)
+end
 ```
 
 # Installation
